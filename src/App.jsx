@@ -759,7 +759,7 @@ const GuideView = ({ onSectionClick }) => (
       <div className="mt-8 p-4 bg-slate-100 rounded-lg text-center">
         <p className="text-xs text-slate-500 font-bold mb-1">טיפ יומי:</p>
         <div className="text-sm text-slate-600">
-          "המים לא נלחמים בך, את נלחמת במים. שחררי."
+          "תקשיבי לשקט של המים; אם שקט לך, את שוחה נכון."
         </div>
       </div>
     </div>
@@ -1157,5 +1157,6 @@ const SwimGuide = () => {
     </div>
   );
 };
+
 
 export default SwimGuide;
