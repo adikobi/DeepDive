@@ -1,6 +1,54 @@
 import React, { useState, useEffect } from 'react';
 import { BookOpen, X, Check, Activity, Footprints, Wind, AlignJustify, ChevronLeft, Lightbulb, GraduationCap, Info, ChevronDown, ChevronUp, Dumbbell, BarChart2, Plus, Calendar, Timer, Trash2, TrendingDown, TrendingUp } from 'lucide-react';
 
+// מיפוי צבעים מלא כדי ש-Tailwind לא ימחק אותם בבנייה
+const COLOR_MAPS = {
+    blue: {
+      stripe: 'bg-blue-500',
+      iconBg: 'bg-blue-50',
+      iconText: 'text-blue-600',
+      bgLight: 'bg-blue-50',
+      borderLight: 'border-blue-100',
+      titleDark: 'text-blue-900',
+      textMedium: 'text-blue-700'
+    },
+    indigo: {
+      stripe: 'bg-indigo-500',
+      iconBg: 'bg-indigo-50',
+      iconText: 'text-indigo-600',
+      bgLight: 'bg-indigo-50',
+      borderLight: 'border-indigo-100',
+      titleDark: 'text-indigo-900',
+      textMedium: 'text-indigo-700'
+    },
+    teal: {
+      stripe: 'bg-teal-500',
+      iconBg: 'bg-teal-50',
+      iconText: 'text-teal-600',
+      bgLight: 'bg-teal-50',
+      borderLight: 'border-teal-100',
+      titleDark: 'text-teal-900',
+      textMedium: 'text-teal-700'
+    },
+    cyan: {
+      stripe: 'bg-cyan-500',
+      iconBg: 'bg-cyan-50',
+      iconText: 'text-cyan-600',
+      bgLight: 'bg-cyan-50',
+      borderLight: 'border-cyan-100',
+      titleDark: 'text-cyan-900',
+      textMedium: 'text-cyan-700'
+    },
+    pink: {
+      stripe: 'bg-pink-500',
+      iconBg: 'bg-pink-50',
+      iconText: 'text-pink-600',
+      bgLight: 'bg-pink-50',
+      borderLight: 'border-pink-100',
+      titleDark: 'text-pink-900',
+      textMedium: 'text-pink-700'
+    },
+  };
 // --- רכיב לוגיקה ומידע (התוכן המקורי נשמר כאן במלואו) ---
 const SECTIONS_DATA = [
     {
@@ -669,174 +717,186 @@ const SimpleLineChart = ({ data, dataKey, color, height = 150 }) => {
 // --- מסכי האפליקציה ---
 
 const GuideView = ({ onSectionClick }) => (
-  <div className="space-y-6 animate-fade-in pb-20">
-    <div className="bg-white p-4 rounded-xl shadow-sm border-r-4 border-green-500">
-      <h2 className="font-bold text-lg mb-1">המיקוד להיום</h2>
-      <p className="text-slate-600 text-sm">
-        שחייה היא 70% טכניקה ופיזיקה, ורק 30% כושר.
-        <br/>
-        <span className="text-xs text-slate-400">הקליקי על נושא כדי לצלול לעומק</span>
-      </p>
-    </div>
-
-    <div className="grid gap-4">
-      {SECTIONS_DATA.map((section) => (
-        <button
-          key={section.id}
-          onClick={() => onSectionClick(section.id)}
-          className={`bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4 hover:shadow-md transition-all text-right w-full group active:scale-95 relative overflow-hidden`}
-        >
-           <div className={`absolute left-0 top-0 bottom-0 w-1 bg-${section.color}-500 opacity-0 group-hover:opacity-100 transition-opacity`} />
-          <div className={`p-3 rounded-full bg-${section.color}-50 text-${section.color}-600 group-hover:scale-110 transition-transform shadow-sm`}>
-            {section.icon}
-          </div>
-          <div>
-            <h3 className="font-bold text-lg text-slate-800">{section.title}</h3>
-            <p className="text-sm text-slate-500">{section.subtitle}</p>
-          </div>
-          <ChevronLeft className="mr-auto text-slate-300" />
-        </button>
-      ))}
-    </div>
-    
-    <div className="mt-8 p-4 bg-slate-100 rounded-lg text-center">
-      <p className="text-xs text-slate-500 font-bold mb-1">טיפ יומי:</p>
-      <div className="text-sm text-slate-600">
-        "המים לא נלחמים בך, את נלחמת במים. שחררי."
-      </div>
-    </div>
-  </div>
-);
-
-const DetailView = ({ activeData, onClose }) => {
-  const [expandedDeepDive, setExpandedDeepDive] = useState({});
-
-  const toggleDeepDive = (index) => {
-    setExpandedDeepDive(prev => ({
-      ...prev,
-      [index]: !prev[index]
-    }));
-  };
-
-  return (
-    <div className="animate-slide-up space-y-6 pb-20">
-      {/* Title Section */}
-      <div className={`bg-${activeData.color}-50 p-6 rounded-2xl text-center border border-${activeData.color}-100 shadow-inner`}>
-        <div className={`inline-block p-4 bg-white rounded-full text-${activeData.color}-600 mb-3 shadow-md`}>
-          {activeData.icon}
-        </div>
-        <h2 className={`text-3xl font-bold text-${activeData.color}-900`}>{activeData.title}</h2>
-        <p className={`text-${activeData.color}-700 mt-2 font-medium text-lg`}>"{activeData.details.concept}"</p>
-      </div>
-
-      {/* Dos and Donts Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="bg-red-50 p-4 rounded-xl border border-red-100">
-          <div className="flex items-center gap-2 mb-3 text-red-700 font-bold border-b border-red-200 pb-2">
-            <X size={18} />
-            <span>להימנע (Don't)</span>
-          </div>
-          <ul className="space-y-3">
-            {activeData.details.donts.map((item, i) => (
-              <li key={i} className="text-sm text-slate-700 leading-tight flex gap-2 items-start">
-                <span className="text-red-400 shrink-0 mt-0.5">•</span> {item}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="bg-green-50 p-4 rounded-xl border border-green-100">
-          <div className="flex items-center gap-2 mb-3 text-green-700 font-bold border-b border-green-200 pb-2">
-            <Check size={18} />
-            <span>לעשות (Do)</span>
-          </div>
-          <ul className="space-y-3">
-            {activeData.details.dos.map((item, i) => (
-              <li key={i} className="text-sm text-slate-700 leading-tight flex gap-2 items-start">
-                <span className="text-green-500 shrink-0 mt-0.5">•</span> {item}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-
-      {/* Body Scan */}
-      <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-        <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2 border-b pb-2">
-          <Activity size={20} className="text-blue-500" />
-          סריקת גוף (Checklist)
-        </h3>
-        <ul className="space-y-3">
-          {activeData.details.bodyCheck.map((check, i) => (
-            <li key={i} className="flex items-start gap-3 text-sm text-slate-600 bg-slate-50 p-3 rounded-lg">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mt-1.5 shrink-0 shadow-sm" />
-              <span>{check}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Imagery */}
-      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-6 rounded-xl border border-indigo-100 shadow-sm relative overflow-hidden group">
-        <div className="absolute -right-6 -top-6 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-          <Lightbulb size={120} />
-        </div>
-        <h3 className="font-bold text-indigo-900 mb-2 flex items-center gap-2 relative z-10">
-          <Lightbulb size={20} />
-          הדימוי המנטלי
-        </h3>
-        <h4 className="font-bold text-xl text-indigo-700 mb-2 relative z-10">{activeData.details.imagery.title}</h4>
-        <p className="text-base text-indigo-800 leading-relaxed relative z-10">
-          {activeData.details.imagery.text}
+    <div className="space-y-6 animate-fade-in pb-20">
+      <div className="bg-white p-4 rounded-xl shadow-sm border-r-4 border-green-500">
+        <h2 className="font-bold text-lg mb-1">המיקוד להיום</h2>
+        <p className="text-slate-600 text-sm">
+          שחייה היא 70% טכניקה ופיזיקה, ורק 30% כושר.
+          <br/>
+          <span className="text-xs text-slate-400">הקליקי על נושא כדי לצלול לעומק</span>
         </p>
       </div>
-
-      {/* Deep Dive Section */}
-      <div className="mt-8 pt-6 border-t-2 border-slate-100">
-        <div className="flex items-center gap-2 mb-4">
-           <div className="bg-purple-100 p-2 rounded-lg text-purple-600">
-              <GraduationCap size={24} />
-           </div>
-           <div>
-              <h3 className="font-bold text-xl text-slate-800">המעמקים (Pro Zone)</h3>
-              <p className="text-xs text-slate-500">הפיזיקה והביומכניקה שמאחורי התנועה</p>
-           </div>
-        </div>
-        
-        <div className="space-y-3">
-          {activeData.details.deepDive.map((item, index) => (
-            <div key={index} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-              <button 
-                  onClick={() => toggleDeepDive(`${activeData.id}-${index}`)}
-                  className="w-full text-right p-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
-              >
-                  <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
-                      <Info size={16} className="text-purple-500 shrink-0" />
-                      {item.title}
-                  </h4>
-                  {expandedDeepDive[`${activeData.id}-${index}`] ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
-              </button>
+  
+      <div className="grid gap-4">
+        {SECTIONS_DATA.map((section) => {
+          // כאן התיקון: שליפת הצבעים הנכונים מהמילון
+          const theme = COLOR_MAPS[section.color]; 
+          
+          return (
+            <button
+              key={section.id}
+              onClick={() => onSectionClick(section.id)}
+              className={`bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4 hover:shadow-md transition-all text-right w-full group active:scale-95 relative overflow-hidden`}
+            >
+               {/* שימוש במשתנה theme.stripe במקום שרשור מחרוזות */}
+               <div className={`absolute left-0 top-0 bottom-0 w-1 ${theme.stripe} opacity-0 group-hover:opacity-100 transition-opacity`} />
               
-              {expandedDeepDive[`${activeData.id}-${index}`] && (
-                  <div className="px-4 pb-4 pt-0 bg-slate-50 border-t border-slate-100 animate-fade-in">
-                      <p className="text-sm text-slate-600 leading-relaxed mt-2 pl-2 border-r-2 border-purple-200 mr-1 pr-3">
-                          {item.content}
-                      </p>
-                  </div>
-              )}
-            </div>
-          ))}
+               {/* שימוש במשתני רקע וטקסט מהמילון */}
+              <div className={`p-3 rounded-full ${theme.iconBg} ${theme.iconText} group-hover:scale-110 transition-transform shadow-sm`}>
+                {section.icon}
+              </div>
+              
+              <div>
+                <h3 className="font-bold text-lg text-slate-800">{section.title}</h3>
+                <p className="text-sm text-slate-500">{section.subtitle}</p>
+              </div>
+              <ChevronLeft className="mr-auto text-slate-300" />
+            </button>
+          );
+        })}
+      </div>
+      
+      <div className="mt-8 p-4 bg-slate-100 rounded-lg text-center">
+        <p className="text-xs text-slate-500 font-bold mb-1">טיפ יומי:</p>
+        <div className="text-sm text-slate-600">
+          "המים לא נלחמים בך, את נלחמת במים. שחררי."
         </div>
       </div>
-
-       <button 
-        onClick={onClose}
-        className="w-full py-4 bg-slate-800 text-white rounded-xl font-bold shadow-lg active:scale-95 transition-transform mt-8 mb-4 sticky bottom-20 z-20"
-      >
-        חזרה לתפריט הראשי
-      </button>
     </div>
   );
+
+  const DetailView = ({ activeData, onClose }) => {
+    const [expandedDeepDive, setExpandedDeepDive] = useState({});
+    
+    // תיקון: שליפת ערכת הצבעים המוכנה מראש
+    const theme = COLOR_MAPS[activeData.color];
+  
+    const toggleDeepDive = (index) => {
+      setExpandedDeepDive(prev => ({
+        ...prev,
+        [index]: !prev[index]
+      }));
+    };
+  
+    return (
+      <div className="animate-slide-up space-y-6 pb-20">
+        {/* Title Section - תוקן להשתמש ב-theme */}
+        <div className={`${theme.bgLight} p-6 rounded-2xl text-center border ${theme.borderLight} shadow-inner`}>
+          <div className={`inline-block p-4 bg-white rounded-full ${theme.iconText} mb-3 shadow-md`}>
+            {activeData.icon}
+          </div>
+          <h2 className={`text-3xl font-bold ${theme.titleDark}`}>{activeData.title}</h2>
+          <p className={`${theme.textMedium} mt-2 font-medium text-lg`}>"{activeData.details.concept}"</p>
+        </div>
+  
+        {/* Dos and Donts Grid - נשאר ללא שינוי (משתמש בצבעים קבועים אדום/ירוק) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="bg-red-50 p-4 rounded-xl border border-red-100">
+            <div className="flex items-center gap-2 mb-3 text-red-700 font-bold border-b border-red-200 pb-2">
+              <X size={18} />
+              <span>להימנע (Don't)</span>
+            </div>
+            <ul className="space-y-3">
+              {activeData.details.donts.map((item, i) => (
+                <li key={i} className="text-sm text-slate-700 leading-tight flex gap-2 items-start">
+                  <span className="text-red-400 shrink-0 mt-0.5">•</span> {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+  
+          <div className="bg-green-50 p-4 rounded-xl border border-green-100">
+            <div className="flex items-center gap-2 mb-3 text-green-700 font-bold border-b border-green-200 pb-2">
+              <Check size={18} />
+              <span>לעשות (Do)</span>
+            </div>
+            <ul className="space-y-3">
+              {activeData.details.dos.map((item, i) => (
+                <li key={i} className="text-sm text-slate-700 leading-tight flex gap-2 items-start">
+                  <span className="text-green-500 shrink-0 mt-0.5">•</span> {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+  
+        {/* Body Scan - תוקן להשתמש ב-theme לצבעי האייקונים */}
+        <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+          <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2 border-b pb-2">
+            <Activity size={20} className={theme.iconText} />
+            סריקת גוף (Checklist)
+          </h3>
+          <ul className="space-y-3">
+            {activeData.details.bodyCheck.map((check, i) => (
+              <li key={i} className="flex items-start gap-3 text-sm text-slate-600 bg-slate-50 p-3 rounded-lg">
+                <div className={`w-2 h-2 ${theme.stripe} rounded-full mt-1.5 shrink-0 shadow-sm`} />
+                <span>{check}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+  
+        {/* Imagery - שימוש בצבעים קבועים (אינדיגו) לדימוי, זה בסדר להשאיר כך או לשנות לפי העדפה */}
+        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-6 rounded-xl border border-indigo-100 shadow-sm relative overflow-hidden group">
+          <div className="absolute -right-6 -top-6 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <Lightbulb size={120} />
+          </div>
+          <h3 className="font-bold text-indigo-900 mb-2 flex items-center gap-2 relative z-10">
+            <Lightbulb size={20} />
+            הדימוי המנטלי
+          </h3>
+          <h4 className="font-bold text-xl text-indigo-700 mb-2 relative z-10">{activeData.details.imagery.title}</h4>
+          <p className="text-base text-indigo-800 leading-relaxed relative z-10">
+            {activeData.details.imagery.text}
+          </p>
+        </div>
+  
+        {/* Deep Dive Section */}
+        <div className="mt-8 pt-6 border-t-2 border-slate-100">
+          <div className="flex items-center gap-2 mb-4">
+             <div className="bg-purple-100 p-2 rounded-lg text-purple-600">
+                <GraduationCap size={24} />
+             </div>
+             <div>
+                <h3 className="font-bold text-xl text-slate-800">המעמקים (Pro Zone)</h3>
+                <p className="text-xs text-slate-500">הפיזיקה והביומכניקה שמאחורי התנועה</p>
+             </div>
+          </div>
+          
+          <div className="space-y-3">
+            {activeData.details.deepDive.map((item, index) => (
+              <div key={index} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <button 
+                    onClick={() => toggleDeepDive(`${activeData.id}-${index}`)}
+                    className="w-full text-right p-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
+                >
+                    <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                        <Info size={16} className="text-purple-500 shrink-0" />
+                        {item.title}
+                    </h4>
+                    {expandedDeepDive[`${activeData.id}-${index}`] ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+                </button>
+                
+                {expandedDeepDive[`${activeData.id}-${index}`] && (
+                    <div className="px-4 pb-4 pt-0 bg-slate-50 border-t border-slate-100 animate-fade-in">
+                        <p className="text-sm text-slate-600 leading-relaxed mt-2 pl-2 border-r-2 border-purple-200 mr-1 pr-3">
+                            {item.content}
+                        </p>
+                    </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+  
+         <button 
+          onClick={onClose}
+          className="w-full py-4 bg-slate-800 text-white rounded-xl font-bold shadow-lg active:scale-95 transition-transform mt-8 mb-4 sticky bottom-20 z-20"
+        >
+          חזרה לתפריט הראשי
+        </button>
+      </div>
+    );
 };
 
 const StatsView = () => {
