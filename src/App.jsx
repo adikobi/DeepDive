@@ -1017,68 +1017,72 @@ const SwimGuide = () => {
   const activeData = SECTIONS_DATA.find(s => s.id === activeSection);
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-800" dir="rtl">
+    <div className="min-h-screen bg-gray-50 flex justify-center font-sans text-slate-800" dir="rtl">
       
-      {/* Wave Header */}
-      <header className="relative bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-xl overflow-hidden pb-8">
-        <div className="max-w-md mx-auto p-6 relative z-10">
-          <div className="flex justify-between items-start">
-            <div>
-                <h1 className="text-3xl font-black tracking-tight mb-1">המדריך המלא</h1>
-                <p className="text-blue-100 text-sm opacity-90 font-medium">שחייה | טכניקה | חיטוב</p>
-            </div>
-            <div className="bg-white/20 backdrop-blur-sm p-2 rounded-full">
-                <BookOpen size={24} className="text-white" />
+      {/* Phone Container */}
+      <div className="w-full max-w-md bg-slate-50 h-full min-h-screen shadow-2xl relative overflow-hidden">
+        
+        {/* Wave Header */}
+        <header className="relative bg-gradient-to-br from-blue-900 via-blue-700 to-blue-500 text-white shadow-lg overflow-hidden pb-10">
+          <div className="p-6 relative z-10">
+            <div className="flex justify-between items-center">
+              <div>
+                  <h1 className="text-4xl font-black tracking-tighter mb-0" style={{fontFamily: "'Inter', sans-serif"}}>DeepDive</h1>
+                  <p className="text-blue-100 text-sm font-medium opacity-90 tracking-wide mt-1">שחייה | טכניקה | חיטוב</p>
+              </div>
+              <div className="bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/20 shadow-inner">
+                  <Activity size={28} className="text-white" />
+              </div>
             </div>
           </div>
-        </div>
-        
-        {/* Decorative Wave SVG */}
-        <div className="absolute bottom-0 left-0 right-0">
-            <svg viewBox="0 0 1440 320" className="w-full h-auto block opacity-30 text-white fill-current">
-                <path d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,160C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
-            </svg>
-        </div>
-      </header>
-
-      <main className="max-w-md mx-auto p-4 -mt-4 relative z-20">
-        
-        {view === 'guide' && !activeSection && (
-            <GuideView onSectionClick={setActiveSection} />
-        )}
-
-        {view === 'guide' && activeSection && (
-            <DetailView activeData={activeData} onClose={() => setActiveSection(null)} />
-        )}
-
-        {view === 'stats' && (
-            <StatsView />
-        )}
-
-      </main>
-
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-3 shadow-lg z-30 flex justify-around items-center text-xs font-bold text-slate-400">
-          <button 
-            onClick={() => {setView('guide'); setActiveSection(null)}} 
-            className={`flex flex-col items-center gap-1 ${view === 'guide' ? 'text-blue-600' : 'hover:text-slate-600'}`}
-          >
-              <BookOpen size={24} strokeWidth={view === 'guide' ? 2.5 : 2} />
-              המדריך
-          </button>
           
-          <div className="w-px h-8 bg-slate-200"></div>
+          {/* Decorative Wave SVG */}
+          <div className="absolute bottom-0 left-0 right-0 translate-y-1">
+              <svg viewBox="0 0 1440 320" className="w-full h-auto block opacity-40 text-slate-50 fill-current">
+                  <path d="M0,192L48,197.3C96,203,192,213,288,229.3C384,245,480,267,576,250.7C672,235,768,181,864,181.3C960,181,1056,235,1152,234.7C1248,235,1344,181,1392,154.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+              </svg>
+          </div>
+        </header>
 
-          <button 
-            onClick={() => setView('stats')} 
-            className={`flex flex-col items-center gap-1 ${view === 'stats' ? 'text-blue-600' : 'hover:text-slate-600'}`}
-          >
-              <BarChart2 size={24} strokeWidth={view === 'stats' ? 2.5 : 2} />
-              המעקב שלי
-          </button>
+        <main className="p-4 -mt-6 relative z-20 pb-24">
+          
+          {view === 'guide' && !activeSection && (
+              <GuideView onSectionClick={setActiveSection} />
+          )}
+
+          {view === 'guide' && activeSection && (
+              <DetailView activeData={activeData} onClose={() => setActiveSection(null)} />
+          )}
+
+          {view === 'stats' && (
+              <StatsView />
+          )}
+
+        </main>
+
+        {/* Bottom Navigation */}
+        <div className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-slate-200 p-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-30 flex justify-around items-center text-xs font-bold text-slate-400">
+            <button 
+              onClick={() => {setView('guide'); setActiveSection(null)}} 
+              className={`flex flex-col items-center gap-1 transition-colors ${view === 'guide' ? 'text-blue-600 scale-105' : 'hover:text-slate-600'}`}
+            >
+                <BookOpen size={24} strokeWidth={view === 'guide' ? 2.5 : 2} />
+                המדריך
+            </button>
+            
+            <div className="w-px h-8 bg-slate-200"></div>
+
+            <button 
+              onClick={() => setView('stats')} 
+              className={`flex flex-col items-center gap-1 transition-colors ${view === 'stats' ? 'text-blue-600 scale-105' : 'hover:text-slate-600'}`}
+            >
+                <BarChart2 size={24} strokeWidth={view === 'stats' ? 2.5 : 2} />
+                המעקב שלי
+            </button>
+        </div>
       </div>
-
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         @keyframes fade-in {
           from { opacity: 0; transform: translateY(5px); }
           to { opacity: 1; transform: translateY(0); }
