@@ -1146,7 +1146,7 @@ const SwimGuide = () => {
             <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-md px-6 z-50 pointer-events-none">
                 <button
                     onClick={() => setActiveSection(null)}
-                    className="absolute left-6 bg-white text-slate-600 p-3 rounded-full shadow-xl border border-slate-100 hover:bg-slate-50 transition-transform active:scale-95 pointer-events-auto animate-fade-in"
+                    className="absolute left-6 bg-slate-200/70 backdrop-blur-md text-slate-700 p-3 rounded-full shadow-lg border border-white/20 hover:bg-slate-300/80 transition-all active:scale-95 pointer-events-auto animate-fade-in"
                     aria-label="חזרה"
                 >
                     <ChevronRight size={24} />
