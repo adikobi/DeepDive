@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen, X, Check, Activity, Footprints, Wind, AlignJustify, ChevronLeft, Lightbulb, GraduationCap, Info, ChevronDown, ChevronUp, Dumbbell, BarChart2, Plus, Calendar, Timer, Trash2, TrendingDown, TrendingUp } from 'lucide-react';
+import { BookOpen, X, Check, Activity, Footprints, Wind, AlignJustify, ChevronLeft, Lightbulb, GraduationCap, Info, ChevronDown, ChevronUp, Dumbbell, BarChart2, Plus, Calendar, Timer, Trash2, TrendingDown, TrendingUp, ChevronRight } from 'lucide-react';
 
 const COLOR_MAPS = {
     blue: {
@@ -688,13 +688,13 @@ const SimpleLineChart = ({ data, dataKey, color, height = 150 }) => {
   const min = Math.min(...values);
   const max = Math.max(...values);
   const range = max - min || 1;
-  
+
   const points = values.map((val, i) => {
     const x = (i / (values.length - 1)) * 100;
-    // For SWOLF and Pace, lower is better, so we invert the Y axis visually? 
+    // For SWOLF and Pace, lower is better, so we invert the Y axis visually?
     // Usually graphs show higher values at top. Let's stick to standard math.
     // If we want lower at top (better), we flip the calc. Let's keep standard: higher value = higher y.
-    const y = 100 - ((val - min) / range) * 100; 
+    const y = 100 - ((val - min) / range) * 100;
     return `${x},${y}`;
   }).join(' ');
 
@@ -705,7 +705,7 @@ const SimpleLineChart = ({ data, dataKey, color, height = 150 }) => {
         <line x1="0" y1="0" x2="100" y2="0" stroke="#eee" strokeWidth="0.5" />
         <line x1="0" y1="50" x2="100" y2="50" stroke="#eee" strokeWidth="0.5" />
         <line x1="0" y1="100" x2="100" y2="100" stroke="#eee" strokeWidth="0.5" />
-        
+
         {/* The Line */}
         <polyline
           fill="none"
@@ -714,7 +714,7 @@ const SimpleLineChart = ({ data, dataKey, color, height = 150 }) => {
           points={points}
           vectorEffect="non-scaling-stroke"
         />
-        
+
         {/* The Dots */}
         {values.map((val, i) => {
            const x = (i / (values.length - 1)) * 100;
@@ -746,12 +746,12 @@ const GuideView = ({ onSectionClick }) => (
           <span className="text-xs text-slate-400">הקליקי על נושא כדי לצלול לעומק</span>
         </p>
       </div>
-  
+
       <div className="grid gap-4">
         {SECTIONS_DATA.map((section) => {
           // כאן התיקון: שליפת הצבעים הנכונים מהמילון
-          const theme = COLOR_MAPS[section.color]; 
-          
+          const theme = COLOR_MAPS[section.color];
+
           return (
             <button
               key={section.id}
@@ -760,12 +760,12 @@ const GuideView = ({ onSectionClick }) => (
             >
                {/* שימוש במשתנה theme.stripe במקום שרשור מחרוזות */}
                <div className={`absolute left-0 top-0 bottom-0 w-1 ${theme.stripe} opacity-0 group-hover:opacity-100 transition-opacity`} />
-              
+
                {/* שימוש במשתני רקע וטקסט מהמילון */}
               <div className={`p-3 rounded-full ${theme.iconBg} ${theme.iconText} group-hover:scale-110 transition-transform shadow-sm`}>
                 {section.icon}
               </div>
-              
+
               <div>
                 <h3 className="font-bold text-lg text-slate-800">{section.title}</h3>
                 <p className="text-sm text-slate-500">{section.subtitle}</p>
@@ -775,7 +775,7 @@ const GuideView = ({ onSectionClick }) => (
           );
         })}
       </div>
-      
+
       <div className="mt-8 p-4 bg-slate-100 rounded-lg text-center">
         <p className="text-xs text-slate-500 font-bold mb-1">טיפ יומי:</p>
         <div className="text-sm text-slate-600">
@@ -787,17 +787,17 @@ const GuideView = ({ onSectionClick }) => (
 
   const DetailView = ({ activeData, onClose }) => {
     const [expandedDeepDive, setExpandedDeepDive] = useState({});
-    
+
     // תיקון: שליפת ערכת הצבעים המוכנה מראש
     const theme = COLOR_MAPS[activeData.color];
-  
+
     const toggleDeepDive = (index) => {
       setExpandedDeepDive(prev => ({
         ...prev,
         [index]: !prev[index]
       }));
     };
-  
+
     return (
       <div className="animate-slide-up space-y-6 pb-20">
         {/* Title Section - תוקן להשתמש ב-theme */}
@@ -808,7 +808,7 @@ const GuideView = ({ onSectionClick }) => (
           <h2 className={`text-3xl font-bold ${theme.titleDark}`}>{activeData.title}</h2>
           <p className={`${theme.textMedium} mt-2 font-medium text-lg`}>"{activeData.details.concept}"</p>
         </div>
-  
+
         {/* Dos and Donts Grid - נשאר ללא שינוי (משתמש בצבעים קבועים אדום/ירוק) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="bg-red-50 p-4 rounded-xl border border-red-100">
@@ -824,7 +824,7 @@ const GuideView = ({ onSectionClick }) => (
               ))}
             </ul>
           </div>
-  
+
           <div className="bg-green-50 p-4 rounded-xl border border-green-100">
             <div className="flex items-center gap-2 mb-3 text-green-700 font-bold border-b border-green-200 pb-2">
               <Check size={18} />
@@ -839,7 +839,7 @@ const GuideView = ({ onSectionClick }) => (
             </ul>
           </div>
         </div>
-  
+
         {/* Body Scan - תוקן להשתמש ב-theme לצבעי האייקונים */}
         <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
           <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2 border-b pb-2">
@@ -855,7 +855,7 @@ const GuideView = ({ onSectionClick }) => (
             ))}
           </ul>
         </div>
-  
+
         {/* Imagery - שימוש בצבעים קבועים (אינדיגו) לדימוי, זה בסדר להשאיר כך או לשנות לפי העדפה */}
         <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-6 rounded-xl border border-indigo-100 shadow-sm relative overflow-hidden group">
           <div className="absolute -right-6 -top-6 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -870,7 +870,7 @@ const GuideView = ({ onSectionClick }) => (
             {activeData.details.imagery.text}
           </p>
         </div>
-  
+
         {/* Deep Dive Section */}
         <div className="mt-8 pt-6 border-t-2 border-slate-100">
           <div className="flex items-center gap-2 mb-4">
@@ -882,11 +882,11 @@ const GuideView = ({ onSectionClick }) => (
                 <p className="text-xs text-slate-500">הפיזיקה והביומכניקה שמאחורי התנועה</p>
              </div>
           </div>
-          
+
           <div className="space-y-3">
             {activeData.details.deepDive.map((item, index) => (
               <div key={index} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <button 
+                <button
                     onClick={() => toggleDeepDive(`${activeData.id}-${index}`)}
                     className="w-full text-right p-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
                 >
@@ -896,7 +896,7 @@ const GuideView = ({ onSectionClick }) => (
                     </h4>
                     {expandedDeepDive[`${activeData.id}-${index}`] ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
                 </button>
-                
+
                 {expandedDeepDive[`${activeData.id}-${index}`] && (
                     <div className="px-4 pb-4 pt-0 bg-slate-50 border-t border-slate-100 animate-fade-in">
                         <p className="text-sm text-slate-600 leading-relaxed mt-2 pl-2 border-r-2 border-purple-200 mr-1 pr-3">
@@ -908,8 +908,8 @@ const GuideView = ({ onSectionClick }) => (
             ))}
           </div>
         </div>
-  
-         <button 
+
+         <button
           onClick={onClose}
           className="w-full py-4 bg-slate-800 text-white rounded-xl font-bold shadow-lg active:scale-95 transition-transform mt-8 mb-4 sticky bottom-20 z-20"
         >
@@ -927,7 +927,7 @@ const StatsView = () => {
   useEffect(() => {
     const savedLogs = localStorage.getItem('swimLogs');
     if (savedLogs) setLogs(JSON.parse(savedLogs));
-    
+
     // Set today's date as default
     const today = new Date().toISOString().split('T')[0];
     setForm(prev => ({ ...prev, date: today }));
@@ -935,7 +935,7 @@ const StatsView = () => {
 
   const saveLog = () => {
     if (!form.distance || !form.time) return;
-    
+
     // Calculate SWOLF if strokes provided
     let calcSwolf = null;
     if (form.strokes && form.time) {
@@ -943,8 +943,8 @@ const StatsView = () => {
         const parts = form.time.split(':');
         const seconds = parseInt(parts[0]) * 60 + parseInt(parts[1]);
         // swolf = time + strokes (per pool). Assuming 25m pool standard for now or simple sum
-        // Logic: The user enters total time and total strokes? Or average? 
-        // Let's assume input is average strokes per length or total. 
+        // Logic: The user enters total time and total strokes? Or average?
+        // Let's assume input is average strokes per length or total.
         // For simplicity in this tracker: Let user input specific SWOLF from watch if they have it.
     }
 
@@ -960,13 +960,13 @@ const StatsView = () => {
         pace = `${pMins}:${pSecs.toString().padStart(2, '0')}`;
     }
 
-    const newLog = { 
-        id: Date.now(), 
-        ...form, 
+    const newLog = {
+        id: Date.now(),
+        ...form,
         pace,
         swolf: form.strokes // Using the "strokes/swolf" input field directly
     };
-    
+
     const updatedLogs = [newLog, ...logs].sort((a,b) => new Date(b.date) - new Date(a.date));
     setLogs(updatedLogs);
     localStorage.setItem('swimLogs', JSON.stringify(updatedLogs));
@@ -985,7 +985,7 @@ const StatsView = () => {
 
   return (
     <div className="space-y-6 pb-24 animate-fade-in">
-        
+
         {/* Summary Cards */}
         <div className="grid grid-cols-2 gap-3">
             <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
@@ -1015,7 +1015,7 @@ const StatsView = () => {
 
         {/* Add Button */}
         {!showForm && (
-            <button 
+            <button
                 onClick={() => setShowForm(true)}
                 className="w-full py-3 bg-blue-600 text-white rounded-xl flex items-center justify-center gap-2 shadow-md hover:bg-blue-700 transition"
             >
@@ -1098,10 +1098,10 @@ const SwimGuide = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex justify-center font-sans text-slate-800" dir="rtl">
-      
+
       {/* Phone Container */}
       <div className="w-full max-w-md bg-slate-50 h-full min-h-screen shadow-2xl relative overflow-hidden">
-        
+
         {/* Wave Header */}
         <header className="relative bg-gradient-to-br from-blue-900 via-blue-700 to-blue-500 text-white shadow-lg overflow-hidden pb-10">
           <div className="p-6 relative z-10">
@@ -1115,7 +1115,7 @@ const SwimGuide = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Decorative Wave SVG */}
           <div className="absolute bottom-0 left-0 right-0 translate-y-1">
               <svg viewBox="0 0 1440 320" className="w-full h-auto block opacity-40 text-slate-50 fill-current">
@@ -1125,7 +1125,7 @@ const SwimGuide = () => {
         </header>
 
         <main className="p-4 -mt-6 relative z-20 pb-24">
-          
+
           {view === 'guide' && !activeSection && (
               <GuideView onSectionClick={setActiveSection} />
           )}
@@ -1140,20 +1140,34 @@ const SwimGuide = () => {
 
         </main>
 
+
+        {/* Floating Back Button */}
+        {view === 'guide' && activeSection && (
+            <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-md px-6 z-50 pointer-events-none">
+                <button
+                    onClick={() => setActiveSection(null)}
+                    className="absolute left-6 bg-white text-slate-600 p-3 rounded-full shadow-xl border border-slate-100 hover:bg-slate-50 transition-transform active:scale-95 pointer-events-auto animate-fade-in"
+                    aria-label="חזרה"
+                >
+                    <ChevronRight size={24} />
+                </button>
+            </div>
+        )}
+
         {/* Bottom Navigation */}
         <div className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-slate-200 p-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-30 flex justify-around items-center text-xs font-bold text-slate-400">
-            <button 
-              onClick={() => {setView('guide'); setActiveSection(null)}} 
+            <button
+              onClick={() => {setView('guide'); setActiveSection(null)}}
               className={`flex flex-col items-center gap-1 transition-colors ${view === 'guide' ? 'text-blue-600 scale-105' : 'hover:text-slate-600'}`}
             >
                 <BookOpen size={24} strokeWidth={view === 'guide' ? 2.5 : 2} />
                 המדריך
             </button>
-            
+
             <div className="w-px h-8 bg-slate-200"></div>
 
-            <button 
-              onClick={() => setView('stats')} 
+            <button
+              onClick={() => setView('stats')}
               className={`flex flex-col items-center gap-1 transition-colors ${view === 'stats' ? 'text-blue-600 scale-105' : 'hover:text-slate-600'}`}
             >
                 <BarChart2 size={24} strokeWidth={view === 'stats' ? 2.5 : 2} />
