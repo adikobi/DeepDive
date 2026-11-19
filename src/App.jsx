@@ -1,221 +1,323 @@
-import React, { useState, useEffect } from 'react';
-import { BookOpen, BarChart2, ChevronRight, ArrowLeft, Check, X, Plus, Trash2 } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { BookOpen, BarChart2, Search, X, Check, Plus, Trash2, ArrowRight, ChevronLeft } from 'lucide-react';
 import { SECTIONS_DATA } from './data.jsx';
 
-// Each topic is a lane. Lanes get deeper (lighter -> darker water) down the list.
-const LANES = [
-  { bg: '#C4E3E2', fg: '#08202E' },
-  { bg: '#8FCBD2', fg: '#08202E' },
-  { bg: '#4FAFC4', fg: '#08202E' },
-  { bg: '#1F7C9C', fg: '#FFFFFF' },
-  { bg: '#0B4A66', fg: '#FFFFFF' },
+/* One colour per topic: strong (c) for white text, tint (t) for panels. */
+const TONES = [
+  { c: '#0F7C8A', t: '#D9EEF0' },
+  { c: '#2563A8', t: '#DCE7F6' },
+  { c: '#C2401F', t: '#FBE0D8' },
+  { c: '#1A7A4E', t: '#DCEFE4' },
+  { c: '#8A5B00', t: '#F6E8C8' },
 ];
 
-const today = () => new Date().toISOString().split('T')[0];
+const EMOJI = /[\u{1F300}-\u{1FAFF}\u2600-\u27BF\uFE0F]/gu;
+const clean = (s) => s.replace(EMOJI, '').replace(/^\s*\d+\.\s*/, '').replace(/^\s*תרגיל \d+:\s*/, '').trim();
+const prep = (s) => s.details.deepDive.map((d, i) => {
+  const [name, ...rest] = d.title.split(' - ');
+  return { i, ex: d.title.includes('🏋️'), title: clean(name), tag: clean(rest.join(' - ')), content: d.content };
+});
+const ITEMS = SECTIONS_DATA.map(prep);
+const INDEX = ITEMS.flatMap((list, t) => list.map((x) => ({ ...x, t })));
+const TOTAL_TIPS = INDEX.length;
 
-/* ---------- Guide ---------- */
+const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
+const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* storage unavailable */ } };
 
-const GuideView = ({ onOpen }) => (
-  <div className="rise">
-    <section className="px-5 pt-8 pb-10">
-      <div className="text-xl font-black tracking-tight">DeepDive</div>
-      <h1 className="mt-10 text-[104px] font-black leading-[.8] tracking-tighter">70%</h1>
-      <p className="mt-4 text-3xl font-black leading-tight">טכניקה ופיזיקה.</p>
-      <p className="mt-2 max-w-[28ch] text-lg">ורק 30% כושר. בחרי מסלול ותצללי לעומק.</p>
-    </section>
+const iso = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const parseD = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const secs = (t = '') => {
+  const v = String(t).trim();
+  const m = /^(\d{1,3}):([0-5]?\d)$/.exec(v);
+  if (m) return Number(m[1]) * 60 + Number(m[2]);
+  return /^\d{1,3}$/.test(v) ? Number(v) * 60 : 0;
+};
+const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
+const pace = (sec, dist) => (sec && dist ? mmss(Math.round((sec / dist) * 100)) : '—');
 
-    {SECTIONS_DATA.map((s, i) => (
-      <React.Fragment key={s.id}>
-        <div className="rope" />
-        <button className="lane" style={{ background: LANES[i].bg, color: LANES[i].fg }} onClick={() => onOpen(s.id)}>
-          <span className="lane-n">{i + 1}</span>
-          <span className="flex-1">
-            <span className="block text-2xl font-black leading-tight">{s.title}</span>
-            <span className="mt-1 block text-sm opacity-85">{s.summary}</span>
-          </span>
-          <ArrowLeft size={22} />
-        </button>
-      </React.Fragment>
-    ))}
-    <div className="rope" />
+/* ---------- Guide: home ---------- */
 
-    <section className="px-5 py-14" style={{ background: 'var(--ink)', color: 'var(--tile)' }}>
-      <p className="text-xs font-bold opacity-60">טיפ יומי</p>
-      <p className="serif mt-3 text-3xl leading-snug">תקשיבי לשקט של המים; אם שקט לך, את שוחה נכון.</p>
-    </section>
-  </div>
-);
+const Home = ({ read, onOpen }) => {
+  const [q, setQ] = useState('');
+  const n = q.trim().toLowerCase();
+  const hits = useMemo(() => (n.length < 2 ? null : INDEX.filter((x) => `${x.title} ${x.content}`.toLowerCase().includes(n)).slice(0, 30)), [n]);
+  const day = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 864e5);
+  const dk = day % SECTIONS_DATA.length;
+  const im = SECTIONS_DATA[dk].details.imagery;
 
-const DetailView = ({ data, index, onClose }) => {
-  const d = data.details;
-  const L = LANES[index];
   return (
-    <div className="rise">
-      <div className="sticky top-0 z-20 flex items-center gap-2 px-5 py-3" style={{ background: L.bg, color: L.fg }}>
-        <button onClick={onClose} className="flex items-center gap-1 text-sm font-black">
-          <ChevronRight size={20} /> כל המסלולים
-        </button>
-        <span className="mr-auto text-sm font-black opacity-70">מסלול {index + 1}</span>
+    <div className="view">
+      <header className="gut hero">
+        <div className="brand enter" style={{ '--d': 0 }}>DeepDive</div>
+        <h1 className="enter" style={{ '--d': 1 }}>שחייה טובה היא 70% טכניקה.</h1>
+        <p className="lead enter" style={{ '--d': 2 }}>{SECTIONS_DATA.length} נושאים ו-{TOTAL_TIPS} הסברים קצרים על הפיזיקה של התנועה במים.</p>
+        <div className="split enter" style={{ '--d': 3 }} role="img" aria-label="70 אחוז טכניקה ופיזיקה, 30 אחוז כושר">
+          <span className="split-a">טכניקה ופיזיקה · 70%</span>
+          <span className="split-b">כושר · 30%</span>
+        </div>
+      </header>
+
+      <div className="gut">
+        <label className="search">
+          <Search size={20} aria-hidden="true" />
+          <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="חיפוש בכל ההסברים, למשל: מרפק" aria-label="חיפוש בהסברים" />
+          {q && <button type="button" onClick={() => setQ('')} aria-label="ניקוי חיפוש"><X size={18} /></button>}
+        </label>
       </div>
 
-      <header className="px-5 pb-12 pt-6" style={{ background: L.bg, color: L.fg }}>
-        <div className="lane-n" style={{ fontSize: 120 }}>{index + 1}</div>
-        <h2 className="mt-6 text-5xl font-black leading-none tracking-tight">{data.title}</h2>
-        <p className="serif mt-5 text-2xl leading-snug">{d.concept}</p>
-      </header>
-      <div className="rope" />
-
-      <section className="px-5 py-10">
-        <h3 className="flex items-center gap-2 text-xl font-black"><Check size={22} /> לעשות</h3>
-        <ul className="mt-4 space-y-3">
-          {d.dos.map((t, i) => <li key={i} className="leading-snug">{t}</li>)}
-        </ul>
-      </section>
-      <section className="px-5 py-10" style={{ background: 'var(--tile-2)' }}>
-        <h3 className="flex items-center gap-2 text-xl font-black"><X size={22} style={{ color: 'var(--accent)' }} /> להימנע</h3>
-        <ul className="mt-4 space-y-3">
-          {d.donts.map((t, i) => <li key={i} className="leading-snug">{t}</li>)}
-        </ul>
-      </section>
-
-      <section className="py-10">
-        <h3 className="px-5 text-xl font-black">סריקת גוף</h3>
-        <div className="mt-4">
-          {d.bodyCheck.map((t, i) => (
-            <div key={i} className="flex gap-4 px-5 py-4" style={i % 2 ? {} : { background: 'rgba(8,32,46,.05)' }}>
-              <span className="w-8 shrink-0 text-2xl font-black leading-none">{String(i + 1).padStart(2, '0')}</span>
-              <span className="leading-snug">{t}</span>
+      {hits ? (
+        <section className="gut mt">
+          <h2 className="h2">{hits.length ? `${hits.length} תוצאות` : 'לא נמצאו תוצאות'}</h2>
+          <div className="stack">
+            {hits.map((x) => (
+              <button key={`${x.t}-${x.i}`} className="hit lift" style={{ '--c': TONES[x.t].c, '--t': TONES[x.t].t }} onClick={() => onOpen(x.t, x.i)}>
+                <span className="chip">{SECTIONS_DATA[x.t].title}</span>
+                <strong>{x.title}</strong>
+                <span className="clamp">{x.content}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : (
+        <>
+          <section className="gut mt">
+            <h2 className="h2">נושאים</h2>
+            <div className="stack">
+              {SECTIONS_DATA.map((s, i) => {
+                const done = (read[s.id] || []).length;
+                const all = ITEMS[i].length;
+                return (
+                  <button key={s.id} className="topic lift" style={{ '--c': TONES[i].c, '--t': TONES[i].t }} onClick={() => onOpen(i)}>
+                    <span className="badge">{React.cloneElement(s.icon, { size: 24 })}</span>
+                    <span className="grow">
+                      <span className="topic-t">{s.title}</span>
+                      <span className="topic-s">{s.subtitle}</span>
+                      <span className="bar"><i style={{ width: `${(done / all) * 100}%` }} /></span>
+                    </span>
+                    <span className="count">{done}/{all}</span>
+                    <ChevronLeft size={20} aria-hidden="true" />
+                  </button>
+                );
+              })}
             </div>
-          ))}
-        </div>
-      </section>
+          </section>
 
-      <section className="px-5 py-14" style={{ background: 'var(--ink)', color: 'var(--tile)' }}>
-        <p className="text-xs font-bold opacity-60">הדימוי המנטלי</p>
-        <h3 className="mt-3 text-4xl font-black leading-none" style={{ color: 'var(--accent)' }}>{d.imagery.title}</h3>
-        <p className="serif mt-5 text-2xl leading-snug">{d.imagery.text}</p>
-      </section>
+          <section className="gut mt">
+            <div className="today" style={{ '--c': TONES[dk].c, '--t': TONES[dk].t }}>
+              <p className="eyebrow">הדימוי להיום · {SECTIONS_DATA[dk].title}</p>
+              <h3>{im.title}</h3>
+              <p className="serif">{im.text}</p>
+            </div>
+          </section>
+        </>
+      )}
+    </div>
+  );
+};
 
-      <section className="pb-32 pt-10">
-        <div className="px-5">
-          <h3 className="text-2xl font-black">המעמקים</h3>
-          <p className="mt-1 text-sm opacity-70">הפיזיקה והביומכניקה שמאחורי התנועה · {d.deepDive.length}</p>
+/* ---------- Guide: topic ---------- */
+
+const Topic = ({ index, openItem, read, markRead, onBack }) => {
+  const s = SECTIONS_DATA[index];
+  const d = s.details;
+  const items = ITEMS[index];
+  const hasEx = items.some((x) => x.ex);
+  const first = items.find((x) => x.i === openItem);
+  const [tab, setTab] = useState(first ? (first.ex ? 'ex' : 'deep') : 'short');
+  const [open, setOpen] = useState(openItem ?? null);
+  const [ticks, setTicks] = useState([]);
+
+  useEffect(() => {
+    if (openItem != null) setTimeout(() => document.getElementById(`it${openItem}`)?.scrollIntoView({ block: 'center' }), 80);
+  }, [openItem]);
+
+  const toggle = (i) => {
+    const next = open === i ? null : i;
+    setOpen(next);
+    if (next != null) markRead(s.id, i);
+  };
+
+  const list = (arr) => arr.map((x, n) => {
+    const isOpen = open === x.i;
+    const done = (read[s.id] || []).includes(x.i);
+    return (
+      <div key={x.i} id={`it${x.i}`} className={`acc${isOpen ? ' open' : ''}`}>
+        <button className="acc-h" aria-expanded={isOpen} onClick={() => toggle(x.i)}>
+          <span className={`acc-n${done ? ' done' : ''}`}>{done ? <Check size={16} /> : n + 1}</span>
+          <span className="grow">{x.title}{x.tag && <em>{x.tag}</em>}</span>
+          <span className="acc-x" aria-hidden="true" />
+        </button>
+        <div className="acc-b"><div><p>{x.content}</p></div></div>
+      </div>
+    );
+  });
+
+  const tabs = [['short', 'בקצרה'], ['deep', `לעומק · ${items.filter((x) => !x.ex).length}`], ...(hasEx ? [['ex', `תרגילים · ${items.filter((x) => x.ex).length}`]] : [])];
+
+  return (
+    <div className="view" style={{ '--c': TONES[index].c, '--t': TONES[index].t }}>
+      <header className="gut topic-hero">
+        <button className="back" onClick={onBack}><ArrowRight size={20} /> כל הנושאים</button>
+        <h1 className="enter" style={{ '--d': 0 }}>{s.title}</h1>
+        <p className="serif enter" style={{ '--d': 1 }}>{d.concept}</p>
+      </header>
+
+      <div className="tabs" role="tablist">
+        {tabs.map(([k, l]) => (
+          <button key={k} role="tab" aria-selected={tab === k} onClick={() => { setTab(k); window.scrollTo(0, 0); }}>{l}</button>
+        ))}
+      </div>
+
+      {tab === 'short' && (
+        <div className="gut mt stack-lg">
+          <section className="panel">
+            <h2 className="h2 row-i"><Check size={20} /> לעשות</h2>
+            <ul>{d.dos.map((t, i) => <li key={i}>{t}</li>)}</ul>
+          </section>
+          <section className="panel no">
+            <h2 className="h2 row-i"><X size={20} /> להימנע</h2>
+            <ul>{d.donts.map((t, i) => <li key={i}>{t}</li>)}</ul>
+          </section>
+          <section>
+            <h2 className="h2">סריקת גוף לפני כניסה למים</h2>
+            <div className="stack">
+              {d.bodyCheck.map((t, i) => (
+                <button key={i} className={`check${ticks.includes(i) ? ' on' : ''}`} aria-pressed={ticks.includes(i)} onClick={() => setTicks(ticks.includes(i) ? ticks.filter((x) => x !== i) : [...ticks, i])}>
+                  <span className="box">{ticks.includes(i) && <Check size={16} />}</span>{t}
+                </button>
+              ))}
+            </div>
+          </section>
+          <section className="today solid">
+            <p className="eyebrow">הדימוי המנטלי</p>
+            <h3>{d.imagery.title}</h3>
+            <p className="serif">{d.imagery.text}</p>
+          </section>
         </div>
-        <div className="mt-5">
-          {d.deepDive.map((item, i) => (
-            <details key={i} className="acc">
-              <summary>{item.title}</summary>
-              <p>{item.content}</p>
-            </details>
-          ))}
-        </div>
-      </section>
+      )}
+      {tab === 'deep' && <div className="mt pb">{list(items.filter((x) => !x.ex))}</div>}
+      {tab === 'ex' && <div className="mt pb">{list(items.filter((x) => x.ex))}</div>}
     </div>
   );
 };
 
 /* ---------- Tracker ---------- */
 
-const Trend = ({ logs }) => {
-  const pts = [...logs].reverse().filter(l => Number(l.strokes) > 0);
-  if (pts.length < 2) return null;
-  const W = 300, H = 110, P = 10;
-  const v = pts.map(l => Number(l.strokes));
-  const min = Math.min(...v), max = Math.max(...v), r = max - min || 1;
-  const xy = v.map((n, i) => [P + (i / (v.length - 1)) * (W - 2 * P), P + (1 - (n - min) / r) * (H - 2 * P)]);
-  const last = xy[xy.length - 1];
-  return (
-    <section className="px-5 py-10">
-      <h3 className="text-xl font-black">מגמת SWOLF</h3>
-      <p className="mt-1 text-sm opacity-70">נמוך יותר = יעיל יותר</p>
-      <div dir="ltr" className="mt-5">
-        <svg viewBox={`0 0 ${W} ${H}`} className="block w-full" role="img" aria-label="גרף מגמת SWOLF">
-          <polyline fill="none" stroke="#08202E" strokeWidth="2.5" strokeLinejoin="round" points={xy.map(p => p.join(',')).join(' ')} />
-          <circle cx={last[0]} cy={last[1]} r="6" fill="#FF5A1F" />
-        </svg>
-        <div className="mt-2 flex justify-between text-xs font-bold opacity-70">
-          <span>{pts[0].date}</span><span>{pts[pts.length - 1].date}</span>
-        </div>
-      </div>
-    </section>
-  );
-};
+const EMPTY = () => ({ date: iso(), distance: '', time: '', strokes: '' });
 
-const StatsView = () => {
-  const [logs, setLogs] = useState([]);
+const Tracker = () => {
+  const [logs, setLogs] = useState(() => load('swimLogs', []));
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ date: today(), distance: '', time: '', strokes: '' });
+  const [f, setF] = useState(EMPTY);
+  const [err, setErr] = useState({});
+  const [undo, setUndo] = useState(null);
+  const timer = useRef();
 
-  useEffect(() => {
-    try { setLogs(JSON.parse(localStorage.getItem('swimLogs')) || []); } catch (e) { /* empty */ }
-  }, []);
+  const persist = (next) => { setLogs(next); store('swimLogs', next); };
+  const byDate = (a, b) => b.date.localeCompare(a.date);
+  const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
 
-  const persist = (next) => {
-    setLogs(next);
-    try { localStorage.setItem('swimLogs', JSON.stringify(next)); } catch (e) { /* empty */ }
+  const submit = () => {
+    const dist = Number(f.distance);
+    const e = {};
+    if (!dist || dist < 25) e.distance = 'הקלידי מרחק במטרים';
+    if (!secs(f.time)) e.time = 'הקלידי זמן, למשל 30:00';
+    setErr(e);
+    if (Object.keys(e).length) return;
+    persist([{ id: Date.now(), ...f, time: f.time.trim(), pace: pace(secs(f.time), dist), swolf: f.strokes }, ...logs].sort(byDate));
+    setOpen(false); setF(EMPTY());
   };
 
-  const save = () => {
-    const m = /^(\d{1,3}):([0-5]?\d)$/.exec(form.time.trim());
-    const dist = Number(form.distance);
-    if (!m || !dist) return;
-    const p = ((Number(m[1]) * 60 + Number(m[2])) / dist) * 100;
-    const pace = `${Math.floor(p / 60)}:${String(Math.floor(p % 60)).padStart(2, '0')}`;
-    const entry = { id: Date.now(), ...form, time: form.time.trim(), pace, swolf: form.strokes };
-    persist([entry, ...logs].sort((a, b) => new Date(b.date) - new Date(a.date)));
-    setOpen(false);
-    setForm({ date: today(), distance: '', time: '', strokes: '' });
+  const remove = (l) => {
+    persist(logs.filter((x) => x.id !== l.id));
+    setUndo(l); clearTimeout(timer.current);
+    timer.current = setTimeout(() => setUndo(null), 5000);
   };
+  const restore = () => { persist([undo, ...logs].sort(byDate)); setUndo(null); };
 
   const total = logs.reduce((a, l) => a + (Number(l.distance) || 0), 0);
-  const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+  const tsec = logs.reduce((a, l) => a + secs(l.time), 0);
+  const rates = logs.map((l) => secs(l.time) / (Number(l.distance) || 0)).filter((x) => x > 0 && isFinite(x));
+  const days = Array.from({ length: 7 }, (_, k) => {
+    const d = new Date(); d.setDate(d.getDate() - (6 - k));
+    const key = iso(d);
+    return { key, k, m: logs.filter((l) => l.date === key).reduce((a, l) => a + (Number(l.distance) || 0), 0), lbl: d.toLocaleDateString('he-IL', { weekday: 'narrow' }) };
+  });
+  const mx = Math.max(...days.map((d) => d.m), 1);
+  const week = days.reduce((a, d) => a + d.m, 0);
+  const live = secs(f.time) && Number(f.distance) ? pace(secs(f.time), Number(f.distance)) : null;
 
   return (
-    <div className="rise pb-32">
-      <section className="px-5 pb-10 pt-8" style={{ background: 'var(--ink)', color: 'var(--tile)' }}>
-        <p className="text-xl font-black tracking-tight">המעקב שלי</p>
-        <p className="mt-10 text-xs font-bold opacity-60">סה״כ מטרים</p>
-        <p className="text-[84px] font-black leading-[.9] tracking-tighter">{total.toLocaleString('en-US')}</p>
-        <p className="mt-5 text-sm opacity-80">{logs.length} אימונים · אחרון: {logs[0]?.date || '—'}</p>
+    <div className="view pb">
+      <header className="gut hero dark">
+        <div className="brand enter" style={{ '--d': 0 }}>המעקב שלי</div>
+        <p className="eyebrow enter" style={{ '--d': 1 }}>סה״כ מטרים</p>
+        <div className="big enter" style={{ '--d': 2 }}>{total.toLocaleString('en-US')}</div>
+        <p className="lead enter" style={{ '--d': 3 }}>{logs.length} אימונים · {week.toLocaleString('en-US')} מ׳ ב-7 הימים האחרונים</p>
+      </header>
+
+      <section className="gut mt">
+        <div className="week" role="img" aria-label="מטרים בשבעת הימים האחרונים">
+          {days.map((d) => (
+            <div key={d.key} className="wd">
+              <div className="wb"><i className={d.k === 6 ? 'now' : ''} style={{ height: `${Math.max((d.m / mx) * 100, d.m ? 8 : 3)}%` }} /></div>
+              <span>{d.lbl}</span>
+            </div>
+          ))}
+        </div>
+        <div className="stats">
+          <div><b>{pace(tsec, total)}</b><span>קצב ממוצע ל-100 מ׳</span></div>
+          <div><b>{rates.length ? mmss(Math.round(Math.min(...rates) * 100)) : '—'}</b><span>הקצב הטוב ביותר</span></div>
+        </div>
       </section>
-      <div className="rope" />
 
-      <Trend logs={logs} />
-
-      <section className="px-5 pb-10 pt-6">
+      <section className="gut mt">
         {!open ? (
           <button className="btn" onClick={() => setOpen(true)}><Plus size={20} /> הוספת אימון</button>
         ) : (
-          <div className="rise -mx-5 px-5 py-8" style={{ background: 'var(--tile-2)' }}>
-            <div className="grid grid-cols-2 gap-x-6 gap-y-6">
-              <label><span className="label">תאריך</span><input className="field" type="date" value={form.date} onChange={set('date')} /></label>
-              <label><span className="label">מרחק (מטרים)</span><input className="field" type="number" inputMode="numeric" placeholder="800" value={form.distance} onChange={set('distance')} /></label>
-              <label><span className="label">זמן (דק:שנ)</span><input className="field" type="text" inputMode="numeric" placeholder="30:00" value={form.time} onChange={set('time')} /></label>
-              <label><span className="label">SWOLF / דופק</span><input className="field" type="number" inputMode="numeric" placeholder="67" value={form.strokes} onChange={set('strokes')} /></label>
+          <div className="form enter">
+            <div className="chips" role="group" aria-label="מרחק מהיר">
+              {[400, 800, 1000, 1500].map((m) => (
+                <button key={m} type="button" className={Number(f.distance) === m ? 'on' : ''} onClick={() => setF({ ...f, distance: String(m) })}>{m}</button>
+              ))}
             </div>
-            <div className="mt-8 flex gap-3">
-              <button className="btn flex-1" onClick={save}>שמירה</button>
-              <button className="flex-1 font-bold" onClick={() => setOpen(false)}>ביטול</button>
+            <div className="grid2">
+              <label><span className="label">מרחק (מטרים)</span><input className="field" type="number" inputMode="numeric" placeholder="800" value={f.distance} onChange={set('distance')} aria-invalid={!!err.distance} />{err.distance && <span className="err">{err.distance}</span>}</label>
+              <label><span className="label">זמן (דק׳:שנ׳)</span><input className="field" type="text" inputMode="numeric" placeholder="30:00" value={f.time} onChange={set('time')} aria-invalid={!!err.time} />{err.time && <span className="err">{err.time}</span>}</label>
+              <label><span className="label">תאריך</span><input className="field" type="date" value={f.date} onChange={set('date')} /></label>
+              <label><span className="label">SWOLF (לא חובה)</span><input className="field" type="number" inputMode="numeric" placeholder="67" value={f.strokes} onChange={set('strokes')} /></label>
+            </div>
+            {live && <p className="live">קצב משוער: <b>{live}</b> ל-100 מ׳</p>}
+            <div className="actions">
+              <button className="btn" onClick={submit}>שמירת אימון</button>
+              <button className="btn ghost" onClick={() => { setOpen(false); setErr({}); }}>ביטול</button>
             </div>
           </div>
         )}
       </section>
 
-      <section>
-        <h3 className="px-5 pb-3 text-xl font-black">היסטוריה</h3>
-        {logs.map(l => (
-          <div key={l.id} className="row">
-            <div>
-              <div className="text-2xl font-black leading-none">{l.distance}<span className="text-sm font-bold"> מ׳</span></div>
-              <div className="mt-1 text-xs opacity-65">{l.date}</div>
+      <section className="mt">
+        <h2 className="h2 gut">היסטוריה</h2>
+        {logs.length === 0 && <p className="gut empty">עוד לא תיעדת אימון. הראשון לוקח חצי דקה.</p>}
+        {logs.map((l) => (
+          <div key={l.id} className="log">
+            <div className="grow">
+              <b className="dist">{l.distance}<small> מ׳</small></b>
+              <span className="muted">{parseD(l.date).toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
             </div>
-            <div className="text-left"><div className="font-black">{l.time}</div><div className="text-xs opacity-65">קצב {l.pace}</div></div>
-            <div className="text-left"><div className="font-black">{l.swolf || '—'}</div><div className="text-xs opacity-65">SWOLF</div></div>
-            <button onClick={() => persist(logs.filter(x => x.id !== l.id))} aria-label="מחיקת אימון" className="p-2 opacity-50 hover:opacity-100"><Trash2 size={18} /></button>
+            <div className="cell"><b>{l.time}</b><span className="muted">קצב {l.pace}</span></div>
+            <div className="cell"><b>{l.swolf || '—'}</b><span className="muted">SWOLF</span></div>
+            <button className="icon" onClick={() => remove(l)} aria-label="מחיקת אימון"><Trash2 size={18} /></button>
           </div>
         ))}
-        {logs.length === 0 && <p className="px-5 py-10 text-lg">אין עדיין אימונים. צאי לשחות!</p>}
       </section>
+
+      {undo && (
+        <div className="toast" role="status">
+          <span>האימון נמחק</span>
+          <button onClick={restore}>ביטול מחיקה</button>
+        </div>
+      )}
     </div>
   );
 };
@@ -224,26 +326,31 @@ const StatsView = () => {
 
 const SwimGuide = () => {
   const [view, setView] = useState('guide');
-  const [active, setActive] = useState(null);
-  const index = SECTIONS_DATA.findIndex(s => s.id === active);
+  const [nav, setNav] = useState(null); // { topic, item }
+  const [read, setRead] = useState(() => load('ddRead', {}));
 
-  useEffect(() => { window.scrollTo(0, 0); }, [view, active]);
+  const markRead = (id, i) => {
+    setRead((r) => {
+      if ((r[id] || []).includes(i)) return r;
+      const next = { ...r, [id]: [...(r[id] || []), i] };
+      store('ddRead', next);
+      return next;
+    });
+  };
+
+  useEffect(() => { window.scrollTo(0, 0); }, [view, nav?.topic]);
 
   return (
-    <div dir="rtl" className="mx-auto min-h-screen w-full max-w-md" style={{ background: 'var(--tile)' }}>
+    <div dir="rtl" lang="he" className="app">
       <main>
-        {view === 'guide' && index < 0 && <GuideView onOpen={setActive} />}
-        {view === 'guide' && index >= 0 && <DetailView data={SECTIONS_DATA[index]} index={index} onClose={() => setActive(null)} />}
-        {view === 'stats' && <StatsView />}
+        {view === 'guide' && !nav && <Home read={read} onOpen={(topic, item) => setNav({ topic, item })} />}
+        {view === 'guide' && nav && <Topic key={`${nav.topic}-${nav.item}`} index={nav.topic} openItem={nav.item} read={read} markRead={markRead} onBack={() => setNav(null)} />}
+        {view === 'stats' && <Tracker />}
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-w-md" style={{ background: 'var(--tile-2)' }}>
-        <button className="tab" aria-current={view === 'guide' ? 'page' : undefined} onClick={() => { setView('guide'); setActive(null); }}>
-          <BookOpen size={22} /> המדריך
-        </button>
-        <button className="tab" aria-current={view === 'stats' ? 'page' : undefined} onClick={() => setView('stats')}>
-          <BarChart2 size={22} /> המעקב שלי
-        </button>
+      <nav className="nav" aria-label="ניווט ראשי">
+        <button aria-current={view === 'guide' ? 'page' : undefined} onClick={() => { setView('guide'); setNav(null); }}><BookOpen size={22} /> המדריך</button>
+        <button aria-current={view === 'stats' ? 'page' : undefined} onClick={() => setView('stats')}><BarChart2 size={22} /> המעקב שלי</button>
       </nav>
     </div>
   );
